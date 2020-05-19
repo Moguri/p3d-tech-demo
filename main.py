@@ -179,7 +179,7 @@ class GameApp(ShowBase):
         # Setup render pipeline
         self.set_background_color(0.53, 0.80, 0.92, 1)
         self.render.set_antialias(p3d.AntialiasAttrib.M_auto)
-        simplepbr.init()
+        self.render_pipeline = simplepbr.init(exposure=4)
 
         # Set up the environment
         self.level = self.loader.load_model('models/terrain.bam')
@@ -193,9 +193,12 @@ class GameApp(ShowBase):
 
 
         # Load a character
+        start_pos_np = self.level.find('**/player_start')
+        start_pos = start_pos_np.get_pos()
         self.actor = Actor('models/clay_golem.bam')
         self.actor.reparent_to(self.render)
         self.actor.set_h(180)
+        self.actor.set_pos(start_pos)
 
         # Set up the camera controller
         self.disable_mouse()
@@ -233,6 +236,9 @@ class GameApp(ShowBase):
         self.accept('turn-right-up', turn, [1])
         self.accept('move-forward-up', move, [(0, -1)])
         self.accept('move-backward-up', move, [(0, 1)])
+
+        # self.render.ls()
+        # self.render.analyze()
 
         # Uncomment this line to show a visual representation of the
         # collisions occurring
