@@ -28,10 +28,7 @@ class CharacterController:
 
         # Use a pusher for obstacle avoidance
         self._char_col = p3d.CollisionNode('obstacle_collider')
-        self._char_col.add_solid(p3d.CollisionSphere(center=(0, 0, 2), radius=1.5))
-        self._char_col.add_solid(p3d.CollisionSphere(center=(0, -0.25, 4), radius=1.5))
-        self._char_col.set_from_collide_mask(p3d.CollideMask.bit(0))
-        self._char_col.set_into_collide_mask(p3d.CollideMask.allOff())
+        self._char_col.add_solid(p3d.CollisionSphere(center=(0, 0, 1.25), radius=0.75))
         self._char_col_np = target.attach_new_node(self._char_col)
         self._char_pusher = p3d.CollisionHandlerPusher()
         self._char_pusher.horizontal = True
@@ -40,12 +37,8 @@ class CharacterController:
         traverser.add_collider(self._char_col_np, self._char_pusher)
 
         # Use a ray to keep the character on the ground
-        self._char_ground_ray = p3d.CollisionRay()
-        self._char_ground_ray.set_origin(0, 0, 9)
-        self._char_ground_ray.set_direction(0, 0, -1)
         self._char_ground_col = p3d.CollisionNode('ground_ray')
-        self._char_ground_col.add_solid(self._char_ground_ray)
-        self._char_ground_col.set_from_collide_mask(p3d.CollideMask.bit(0))
+        self._char_ground_col.add_solid(p3d.CollisionRay(origin=(0, 0, 2.5), direction=(0, 0, -1)))
         self._char_ground_col.set_into_collide_mask(p3d.CollideMask.allOff())
         self._char_ground_col_np = target.attach_new_node(self._char_ground_col)
         self._char_ground_handler = p3d.CollisionHandlerQueue()
@@ -59,16 +52,21 @@ class CharacterController:
         self.turn_delta = 0
         self._prev_turn_delta = 0
 
+        # Show colliders
+        # self._char_col_np.show()
+        # self._char_ground_col_np.show()
+
     def update(self):
         dt = p3d.ClockObject.get_global_clock().get_dt()
 
         # Adjust the character's z position to stick to the ground
         entries = list(self._char_ground_handler.entries)
-        entries.sort(key=lambda x: x.get_surface_point(base.render).get_z())
+        entries.sort(key=lambda x: -x.get_surface_point(base.render).get_z())
 
         for entry in entries:
-            if entry.get_into_node().get_name() == 'terrain':
+            if entry.get_into_node().name != self._char_col.name:
                 self.target.set_z(entry.get_surface_point(base.render).get_z())
+                break
 
         # Update movement
         pos_offset = p3d.LVector3(
@@ -241,7 +239,7 @@ class GameApp(ShowBase):
 
         # Uncomment this line to show a visual representation of the
         # collisions occurring
-        #self.cTrav.showCollisions(self.render)
+        # self.cTrav.showCollisions(self.render)
 
 
 def main():
