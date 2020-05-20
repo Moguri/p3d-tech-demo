@@ -177,9 +177,9 @@ class GameApp(ShowBase):
         self.accept('quit', sys.exit)
 
         # Setup render pipeline
-        self.set_background_color(0.53, 0.80, 0.92, 1)
+        self.set_background_color(0.163, 0.065, 0.034, 1)
         self.render.set_antialias(p3d.AntialiasAttrib.M_auto)
-        self.render_pipeline = simplepbr.init(exposure=4)
+        self.render_pipeline = simplepbr.init(exposure=3)
 
         # Set up the environment
         self.level = self.loader.load_model('models/terrain.bam')
@@ -190,7 +190,6 @@ class GameApp(ShowBase):
             light.parent.reparent_to(self.render)
             self.render.set_light(light)
         self.level.clear_light()
-
 
         # Load a character
         start_pos_np = self.level.find('**/player_start')
