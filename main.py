@@ -53,9 +53,18 @@ class CharacterController:
         self.turn_delta = 0
         self._prev_turn_delta = 0
 
-        # Show colliders
-        # obstacle_sphere.show()
-        # ground_ray.show()
+        # Save colliders for debug toggle
+        self._colliders = [
+            obstacle_sphere,
+            ground_ray,
+        ]
+
+    def toggle_debug(self):
+        for col in self._colliders:
+            if col.is_hidden():
+                col.show()
+            else:
+                col.hide()
 
     def update(self):
         dt = p3d.ClockObject.get_global_clock().get_dt()
@@ -234,12 +243,18 @@ class GameApp(ShowBase):
         self.accept('move-forward-up', move, [(0, -1)])
         self.accept('move-backward-up', move, [(0, 1)])
 
+        self.debug_vis_enabled = False
+        def toggle_debug_vis():
+            if self.debug_vis_enabled:
+                self.cTrav.hide_collisions()
+            else:
+                self.cTrav.show_collisions(self.render)
+            self.character_controller.toggle_debug()
+            self.debug_vis_enabled = not self.debug_vis_enabled
+        self.accept('toggle-debug-vis', toggle_debug_vis)
+
         # self.render.ls()
         # self.render.analyze()
-
-        # Uncomment this line to show a visual representation of the
-        # collisions occurring
-        # self.cTrav.showCollisions(self.render)
 
 
 def main():
