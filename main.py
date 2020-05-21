@@ -125,16 +125,12 @@ class CameraController:
         self.offset = offset
 
         # Use a ray to detect the ground
-        self._cam_ground_ray = p3d.CollisionRay()
-        self._cam_ground_ray.set_origin(0, 0, 9)
-        self._cam_ground_ray.set_direction(0, 0, -1)
-        self._cam_ground_col = p3d.CollisionNode('ground_ray')
-        self._cam_ground_col.add_solid(self._cam_ground_ray)
-        self._cam_ground_col.set_from_collide_mask(p3d.CollideMask.bit(0))
-        self._cam_ground_col.set_into_collide_mask(p3d.CollideMask.allOff())
-        self._cam_ground_col_np = self.camera.attach_new_node(self._cam_ground_col)
-        self._cam_ground_handler = p3d.CollisionHandlerQueue()
-        traverser.add_collider(self._cam_ground_col_np, self._cam_ground_handler)
+        ground_ray = p3d.CollisionNode('ground_ray')
+        ground_ray.add_solid(p3d.CollisionRay(origin=(0, 0, 9), direction=(0, 0, -1)))
+        ground_ray.set_into_collide_mask(p3d.CollideMask.allOff())
+        ground_ray = self.camera.attach_new_node(ground_ray)
+        self._ground_handler = p3d.CollisionHandlerQueue()
+        traverser.add_collider(ground_ray, self._ground_handler)
 
         self.turn_delta = 0
 
@@ -156,12 +152,12 @@ class CameraController:
 
         # Keep the camera at one unit above the terrain,
         # or two units above the target, whichever is greater.
-        entries = list(self._cam_ground_handler.entries)
-        entries.sort(key=lambda x: x.get_surface_point(base.render).get_z())
+        entries = list(self._ground_handler.entries)
+        entries.sort(key=lambda x: -x.get_surface_point(base.render).get_z())
 
         for entry in entries:
-            if entry.get_into_node().get_name() == 'terrain':
-                self.camera.set_z(entry.get_surface_point(base.render).get_z() + 1.5)
+            self.camera.set_z(entry.get_surface_point(base.render).get_z() + 1.5)
+            break
         if self.camera.get_z() < self.target.get_z() + 2.0:
             self.camera.set_z(self.target.get_z() + 2.0)
 
