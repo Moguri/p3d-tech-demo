@@ -27,22 +27,23 @@ class CharacterController:
         self.target = target
 
         # Use a pusher for obstacle avoidance
-        self._char_col = p3d.CollisionNode('obstacle_collider')
-        self._char_col.add_solid(p3d.CollisionSphere(center=(0, 0, 1.25), radius=0.75))
-        self._char_col_np = target.attach_new_node(self._char_col)
-        self._char_pusher = p3d.CollisionHandlerPusher()
-        self._char_pusher.horizontal = True
+        obstacle_sphere = p3d.CollisionNode('obstacle_sphere')
+        obstacle_sphere.add_solid(p3d.CollisionSphere(center=(0, 0, 1.25), radius=0.75))
+        obstacle_sphere.set_into_collide_mask(p3d.CollideMask.allOff())
+        obstacle_sphere = target.attach_new_node(obstacle_sphere)
+        char_pusher = p3d.CollisionHandlerPusher()
+        char_pusher.horizontal = True
 
-        self._char_pusher.add_collider(self._char_col_np, target)
-        traverser.add_collider(self._char_col_np, self._char_pusher)
+        char_pusher.add_collider(obstacle_sphere, target)
+        traverser.add_collider(obstacle_sphere, char_pusher)
 
         # Use a ray to keep the character on the ground
-        self._char_ground_col = p3d.CollisionNode('ground_ray')
-        self._char_ground_col.add_solid(p3d.CollisionRay(origin=(0, 0, 2.5), direction=(0, 0, -1)))
-        self._char_ground_col.set_into_collide_mask(p3d.CollideMask.allOff())
-        self._char_ground_col_np = target.attach_new_node(self._char_ground_col)
+        ground_ray = p3d.CollisionNode('ground_ray')
+        ground_ray.add_solid(p3d.CollisionRay(origin=(0, 0, 2.5), direction=(0, 0, -1)))
+        ground_ray.set_into_collide_mask(p3d.CollideMask.allOff())
+        ground_ray = target.attach_new_node(ground_ray)
         self._char_ground_handler = p3d.CollisionHandlerQueue()
-        traverser.add_collider(self._char_ground_col_np, self._char_ground_handler)
+        traverser.add_collider(ground_ray, self._char_ground_handler)
 
         # Direction to move in
         self.move_delta = p3d.LVector2(0, 0)
@@ -53,8 +54,8 @@ class CharacterController:
         self._prev_turn_delta = 0
 
         # Show colliders
-        # self._char_col_np.show()
-        # self._char_ground_col_np.show()
+        # obstacle_sphere.show()
+        # ground_ray.show()
 
     def update(self):
         dt = p3d.ClockObject.get_global_clock().get_dt()
@@ -64,9 +65,8 @@ class CharacterController:
         entries.sort(key=lambda x: -x.get_surface_point(base.render).get_z())
 
         for entry in entries:
-            if entry.get_into_node().name != self._char_col.name:
-                self.target.set_z(entry.get_surface_point(base.render).get_z())
-                break
+            self.target.set_z(entry.get_surface_point(base.render).get_z())
+            break
 
         # Update movement
         pos_offset = p3d.LVector3(
