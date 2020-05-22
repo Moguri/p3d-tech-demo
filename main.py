@@ -182,7 +182,10 @@ class GameApp(ShowBase):
         # Setup render pipeline
         self.set_background_color(0.163, 0.065, 0.034, 1)
         self.render.set_antialias(p3d.AntialiasAttrib.M_auto)
-        self.render_pipeline = simplepbr.init(exposure=3)
+        self.render_pipeline = simplepbr.init(
+            msaa_samples=p3d.ConfigVariableInt('msaa-samples', 4).get_value(),
+            exposure=3,
+        )
 
         # Set up the environment
         self.level = self.loader.load_model('models/terrain.bam')
