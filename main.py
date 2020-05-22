@@ -170,6 +170,22 @@ class CameraController:
         self.camera.set_x(self.camera, self.turn_delta * self.TURN_SPEED * dt)
 
 
+def fit_caster_to_scene(lightnp, scenenp):
+    lightlens = lightnp.node().get_lens()
+
+    bounds = scenenp.get_tight_bounds(lightnp)
+    if bounds:
+        bmin, bmax = bounds
+        lightlens.set_film_offset((bmin.xz + bmax.xz) * 0.5)
+        lightlens.set_film_size(bmax.xz - bmin.xz)
+        lightlens.set_near_far(bmin.y, bmax.y)
+        print(bounds)
+    else:
+        scenenp.ls()
+        print('Warning: Unable to calculate scene bounds for optimized shadows')
+        lightlens.set_film_size(100, 100)
+
+
 class GameApp(ShowBase):
     def __init__(self):
         super().__init__(self)
@@ -184,12 +200,18 @@ class GameApp(ShowBase):
         self.render.set_antialias(p3d.AntialiasAttrib.M_auto)
         self.render_pipeline = simplepbr.init(
             msaa_samples=p3d.ConfigVariableInt('msaa-samples', 4).get_value(),
+            enable_shadows=p3d.ConfigVariableInt('enable-shadows', True).get_value(),
             exposure=3,
         )
 
         # Set up the environment
         self.level = self.loader.load_model('models/terrain.bam')
         self.level.reparent_to(self.render)
+
+        # Setup shadows manually for now
+        shadow_caster = self.level.find('**/Sun/+DirectionalLight')
+        shadow_caster.node().set_shadow_caster(True, 2048, 2048)
+        fit_caster_to_scene(shadow_caster, self.level)
 
         # Pull the level lighting up to affect all models
         for light in self.level.find_all_matches('**/+Light'):
