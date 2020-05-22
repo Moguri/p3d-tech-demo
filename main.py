@@ -273,6 +273,8 @@ class GameApp(ShowBase):
             self.character_controller.toggle_debug()
             self.debug_vis_enabled = not self.debug_vis_enabled
         self.accept('toggle-debug-vis', toggle_debug_vis)
+        self.accept('toggle-buffer-viewer', self.bufferViewer.toggleEnable)
+        self.accept('toggle-oobe', self.oobe)
 
         # self.render.ls()
         # self.render.analyze()
