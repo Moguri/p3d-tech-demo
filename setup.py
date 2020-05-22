@@ -14,7 +14,7 @@ setup(
     tests_require=[
         'pytest',
         'pylint~=2.5.0',
-        'pytest-pylint~=0.15.0',
+        'pytest-pylint',
     ],
     cmdclass={
         'build_apps': pman.build_apps.BuildApps,
