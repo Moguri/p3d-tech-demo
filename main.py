@@ -179,7 +179,6 @@ def fit_caster_to_scene(lightnp, scenenp):
         lightlens.set_film_offset((bmin.xz + bmax.xz) * 0.5)
         lightlens.set_film_size(bmax.xz - bmin.xz)
         lightlens.set_near_far(bmin.y, bmax.y)
-        print(bounds)
     else:
         scenenp.ls()
         print('Warning: Unable to calculate scene bounds for optimized shadows')
