@@ -200,7 +200,7 @@ class GameApp(ShowBase):
         self.render_pipeline = simplepbr.init(
             msaa_samples=p3d.ConfigVariableInt('msaa-samples', 4).get_value(),
             enable_shadows=p3d.ConfigVariableBool('enable-shadows', True).get_value(),
-            exposure=3,
+            exposure=6,
         )
 
         # Set up the environment
@@ -217,6 +217,12 @@ class GameApp(ShowBase):
             light.parent.reparent_to(self.render)
             self.render.set_light(light)
         self.level.clear_light()
+
+        # Add some ambient light to fake indirect light
+        amb = p3d.AmbientLight('ambient')
+        amb.set_color((0.1, 0.1, 0.1, 1.0))
+        amb = self.level.attach_new_node(amb)
+        self.render.set_light(amb)
 
         # Load a character
         start_pos_np = self.level.find('**/player_start')
