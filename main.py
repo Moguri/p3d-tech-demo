@@ -269,6 +269,11 @@ class GameApp(ShowBase):
         self.accept('move-forward-up', move, [(0, -1)])
         self.accept('move-backward-up', move, [(0, 1)])
 
+        # Setup background music
+        bgmusic = self.loader.load_music('music/snowland_town.opus')
+        self.playMusic(bgmusic, looping=True)
+
+        # Add some debug controls
         self.debug_vis_enabled = False
         def toggle_debug_vis():
             if self.debug_vis_enabled:
