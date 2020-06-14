@@ -136,7 +136,6 @@ class CameraController:
         camray.add_solid(p3d.CollisionRay(origin=self.offset, direction=(0, -1, 0)))
         camray.set_into_collide_mask(p3d.CollideMask.allOff())
         camray = self.target.attach_new_node(camray)
-        camray.show()
         self._rayhandler = p3d.CollisionHandlerQueue()
         traverser.add_collider(camray, self._rayhandler)
 
