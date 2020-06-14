@@ -6,6 +6,9 @@ texture-minfilter mipmap
 texture-anisotropic-degree 16
 msaa-samples 4
 enable-shadows true
+camera-hfov 60
+camera-distance-min 1
+camera-distance-max 10
 
 ; Controls
 event-map-item-quit escape

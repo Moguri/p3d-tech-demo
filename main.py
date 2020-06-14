@@ -123,8 +123,8 @@ class CameraController:
         self.camera = camera
         self.target = target
         self.offset = offset
-        self.distance_min = 1.5
-        self.distance_max = 10
+        self.distance_min = p3d.ConfigVariableDouble('camera-distance-min', 1).get_value()
+        self.distance_max = p3d.ConfigVariableDouble('camera-distance-max', 10).get_value()
 
         # self.camera.set_pos(self.target.get_x(), self.target.get_y() + 10, 2)
         self.camera.reparent_to(self.target)
@@ -238,6 +238,8 @@ class GameApp(ShowBase):
 
         # Set up the camera controller
         self.disable_mouse()
+        self.camLens.set_fov(p3d.ConfigVariableDouble('camera-hfov', 60).get_value())
+        self.camLens.set_near(0.5)
         self.camera_controller = CameraController(
             self.camera, self.cTrav, self.actor, p3d.LVector3(0, 0, 2.0)
         )
