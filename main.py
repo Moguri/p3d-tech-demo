@@ -123,51 +123,56 @@ class CameraController:
         self.camera = camera
         self.target = target
         self.offset = offset
+        self.distance_min = 1.5
+        self.distance_max = 10
 
-        # Use a ray to detect the ground
-        ground_ray = p3d.CollisionNode('ground_ray')
-        ground_ray.add_solid(p3d.CollisionRay(origin=(0, 0, 9), direction=(0, 0, -1)))
-        ground_ray.set_into_collide_mask(p3d.CollideMask.allOff())
-        ground_ray = self.camera.attach_new_node(ground_ray)
-        self._ground_handler = p3d.CollisionHandlerQueue()
-        traverser.add_collider(ground_ray, self._ground_handler)
+        # self.camera.set_pos(self.target.get_x(), self.target.get_y() + 10, 2)
+        self.camera.reparent_to(self.target)
+        self.camera.set_pos(self.offset)
+        self.camera.set_y(-self.distance_min)
 
-        self.turn_delta = 0
+        # Use a ray to detect obstacles
+        camray = p3d.CollisionNode('cam_ray')
+        camray.add_solid(p3d.CollisionRay(origin=self.offset, direction=(0, -1, 0)))
+        camray.set_into_collide_mask(p3d.CollideMask.allOff())
+        camray = self.target.attach_new_node(camray)
+        camray.show()
+        self._rayhandler = p3d.CollisionHandlerQueue()
+        traverser.add_collider(camray, self._rayhandler)
+
+        self._colliders = [
+            camray,
+        ]
+
+    def toggle_debug(self):
+        for col in self._colliders:
+            if col.is_hidden():
+                col.show()
+            else:
+                col.hide()
 
     def update(self):
         dt = p3d.ClockObject.get_global_clock().get_dt()
+        lerpfactor = min(10.0 * dt, 0.5)
 
-        # If the camera is too far from the target, move it closer.
-        # If the camera is too close to the target, move it farther.
-        camvec = self.target.get_pos() - self.camera.get_pos()
-        camvec.set_z(0)
-        camdist = camvec.length()
-        camvec.normalize()
-        if camdist > 10.0:
-            self.camera.set_pos(self.camera.get_pos() + camvec * (camdist - 10))
-            camdist = 10.0
-        if camdist < 5.0:
-            self.camera.set_pos(self.camera.get_pos() - camvec * (5 - camdist))
-            camdist = 5.0
+        # Move the camera behind the target
+        prevdist = self.camera.get_y()
+        self.camera.set_pos(self.offset)
 
-        # Keep the camera at one unit above the terrain,
-        # or two units above the target, whichever is greater.
-        entries = list(self._ground_handler.entries)
-        entries.sort(key=lambda x: -x.get_surface_point(base.render).get_z())
+        # Adjust camera distance to avoid obstacles
+        entries = list(self._rayhandler.entries)
+        entries.sort(key=lambda x: -x.get_surface_point(self.target).get_y())
 
+        camdist = -self.distance_max
         for entry in entries:
-            self.camera.set_z(entry.get_surface_point(base.render).get_z() + 1.5)
+            camdist = entry.get_surface_point(self.target).get_y()
             break
-        if self.camera.get_z() < self.target.get_z() + 2.0:
-            self.camera.set_z(self.target.get_z() + 2.0)
 
-        # The camera should look in target's direction,
-        # but it should also try to stay horizontal, so look a
-        # bit above target's head.
-        self.camera.look_at(self.target.get_pos() + self.offset)
-
-        # Rotate the camera
-        self.camera.set_x(self.camera, self.turn_delta * self.TURN_SPEED * dt)
+        if camdist > -self.distance_min:
+            camdist = -self.distance_min
+        elif camdist < -self.distance_max:
+            camdist = -self.distance_max
+        self.camera.set_y(prevdist + lerpfactor * (camdist - prevdist))
 
 
 def fit_caster_to_scene(lightnp, scenenp):
@@ -234,7 +239,6 @@ class GameApp(ShowBase):
 
         # Set up the camera controller
         self.disable_mouse()
-        self.camera.set_pos(self.actor.get_x(), self.actor.get_y() + 10, 2)
         self.camera_controller = CameraController(
             self.camera, self.cTrav, self.actor, p3d.LVector3(0, 0, 2.0)
         )
@@ -242,12 +246,6 @@ class GameApp(ShowBase):
             self.camera_controller.update()
             return task.cont
         self.task_mgr.add(cam_cont_updt, 'Update Camera')
-        def turn_camera(turndir):
-            self.camera_controller.turn_delta += turndir
-        self.accept('camera-left', turn_camera, [1])
-        self.accept('camera-right', turn_camera, [-1])
-        self.accept('camera-left-up', turn_camera, [-1])
-        self.accept('camera-right-up', turn_camera, [1])
 
         # Setup the character controller
         self.character_controller = CharacterController(self.actor, self.cTrav)
@@ -281,6 +279,7 @@ class GameApp(ShowBase):
             else:
                 self.cTrav.show_collisions(self.render)
             self.character_controller.toggle_debug()
+            self.camera_controller.toggle_debug()
             self.debug_vis_enabled = not self.debug_vis_enabled
         self.accept('toggle-debug-vis', toggle_debug_vis)
         self.accept('toggle-buffer-viewer', self.bufferViewer.toggleEnable)
