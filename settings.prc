@@ -1,7 +1,11 @@
 window-title Panda3D Demo
 cursor-hidden true
+
+; Graphics Settings
 texture-minfilter mipmap
 texture-anisotropic-degree 16
+msaa-samples 4
+enable-shadows true
 
 ; Controls
 event-map-item-quit escape
