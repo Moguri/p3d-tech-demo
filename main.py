@@ -208,7 +208,7 @@ class GameApp(ShowBase):
         )
 
         # Set up the environment
-        self.level = self.loader.load_model('models/terrain.bam')
+        self.level = self.loader.load_model('levels/terrain.bam')
         self.level.reparent_to(self.render)
 
         # Setup shadows manually for now
@@ -231,7 +231,7 @@ class GameApp(ShowBase):
         # Load a character
         start_pos_np = self.level.find('**/player_start')
         start_pos = start_pos_np.get_pos()
-        self.actor = Actor('models/clay_golem.bam')
+        self.actor = Actor('characters/clay_golem.bam')
         self.actor.reparent_to(self.render)
         self.actor.set_h(180)
         self.actor.set_pos(start_pos)
