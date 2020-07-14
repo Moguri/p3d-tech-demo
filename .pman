@@ -1,2 +1,3 @@
 [build]
 converters = [ "blend2bam",]
+ignore_patterns = ['level_models/*', '*.blend1', '*.blend2']

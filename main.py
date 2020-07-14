@@ -208,7 +208,7 @@ class GameApp(ShowBase):
         )
 
         # Set up the environment
-        self.level = self.loader.load_model('levels/terrain.bam')
+        self.level = self.loader.load_model('levels/shrine.bam')
         self.level.reparent_to(self.render)
 
         # Setup shadows manually for now
