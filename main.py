@@ -231,9 +231,10 @@ class GameApp(ShowBase):
         # Load a character
         start_pos_np = self.level.find('**/player_start')
         start_pos = start_pos_np.get_pos()
+        starth = start_pos_np.get_h()
         self.actor = Actor('characters/clay_golem.bam')
         self.actor.reparent_to(self.render)
-        self.actor.set_h(180)
+        self.actor.set_h(starth)
         self.actor.set_pos(start_pos)
 
         # Set up the camera controller
