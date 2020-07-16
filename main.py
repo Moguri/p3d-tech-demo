@@ -189,6 +189,43 @@ def fit_caster_to_scene(lightnp, scenenp):
         lightlens.set_film_size(100, 100)
 
 
+def load_level(parent, levelname):
+    level = base.loader.load_model(f'levels/{levelname}.bam')
+    level.reparent_to(parent)
+
+    # Setup shadows manually for now
+    shadow_caster = level.find('**/Sun/+DirectionalLight')
+    shadow_caster.node().set_shadow_caster(True, 2048, 2048)
+    fit_caster_to_scene(shadow_caster, level)
+
+    # Pull the level lighting up to affect all models
+    for light in level.find_all_matches('**/+Light'):
+        light.parent.reparent_to(parent)
+        parent.set_light(light)
+    level.clear_light()
+
+    # Add some ambient light to fake indirect light
+    amb = p3d.AmbientLight('ambient')
+    amb.set_color((0.1, 0.1, 0.1, 1.0))
+    amb = parent.attach_new_node(amb)
+    parent.set_light(amb)
+
+    # Per-level tweaks
+    if levelname == 'shrine':
+        # Remove unneeded particle system mesh
+        level.find('GrassSystem').remove_node()
+
+        # Combine grass nodes
+        level.find('Grass').remove_node() # Not sure why this got exported
+        grass = p3d.NodePath('grass')
+        for node in level.find_all_matches('Grass.*'):
+            node.reparent_to(grass)
+        grass.flatten_strong()
+        grass.reparent_to(level)
+
+    return level
+
+
 class GameApp(ShowBase):
     def __init__(self):
         super().__init__(self)
@@ -208,25 +245,7 @@ class GameApp(ShowBase):
         )
 
         # Set up the environment
-        self.level = self.loader.load_model('levels/shrine.bam')
-        self.level.reparent_to(self.render)
-
-        # Setup shadows manually for now
-        shadow_caster = self.level.find('**/Sun/+DirectionalLight')
-        shadow_caster.node().set_shadow_caster(True, 2048, 2048)
-        fit_caster_to_scene(shadow_caster, self.level)
-
-        # Pull the level lighting up to affect all models
-        for light in self.level.find_all_matches('**/+Light'):
-            light.parent.reparent_to(self.render)
-            self.render.set_light(light)
-        self.level.clear_light()
-
-        # Add some ambient light to fake indirect light
-        amb = p3d.AmbientLight('ambient')
-        amb.set_color((0.1, 0.1, 0.1, 1.0))
-        amb = self.level.attach_new_node(amb)
-        self.render.set_light(amb)
+        self.level = load_level(self.render, 'shrine')
 
         # Load a character
         start_pos_np = self.level.find('**/player_start')
